@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"="width=device-width, initial-scale=1.0">
+  <title>People Analytics Onboarding - Carta</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, createElement: h } = React;
+
+    // Lucide icons as inline SVGs
+    const Icons = {
+      CheckCircle: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      Circle: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+        </svg>
+      ),
+      Calendar: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect width="18" height="18" x="3" y="4" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+          <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+          <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+          <line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+        </svg>
+      ),
+      Users: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      BookOpen: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      ),
+      MessageSquare: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
+      ExternalLink: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      ),
+      ChevronRight: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <polyline points="9 18 15 12 9 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+        </svg>
+      ),
+      Sparkles: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      ),
+      Search: (props) => (
+        <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35"/>
+        </svg>
+      )
+    };
+
+    // Onboarding data
+    const ONBOARDING_DATA = {
+      phases: [
+        {
+          id: 'phase1',
+          name: 'Learn the Current State',
+          weeks: '1-3',
+          goal: 'Understand what exists today, how decisions are made now, where data is trusted or avoided, and where friction lives.',
+          weeks_detail: [
+            {
+              week: 1,
+              dates: 'Jan 6-10',
+              focus: 'Orientation & Knowledge Transfer from May',
+              activities: [
+                { id: 'w1a1', text: 'Complete IT setup (Workday, JIRA, Domo, Lattice, Slack, Drive)', category: 'setup' },
+                { id: 'w1a2', text: 'Review onboarding plan with Nicole', category: 'meeting' },
+                { id: 'w1a3', text: 'Join key Slack channels', category: 'setup' },
+                { id: 'w1a4', text: 'Deep dive with May on Domo dashboards (3-4 sessions)', category: 'meeting' },
+                { id: 'w1a5', text: 'Review historical ONA and performance analyses', category: 'research' },
+                { id: 'w1a6', text: 'Understand May\'s analytics philosophy and constraints', category: 'research' }
+              ],
+              deliverables: [
+                'System access confirmed',
+                'Notes document from May knowledge transfer',
+                'Initial list of questions for stakeholders'
+              ]
+            },
+            {
+              week: 2,
+              dates: 'Jan 13-17',
+              focus: 'Workday Data Deep Dive',
+              activities: [
+                { id: 'w2a1', text: 'Audit all Workday reports with Khadi, Sarah, Perla', category: 'research' },
+                { id: 'w2a2', text: 'Document calculated fields and limitations', category: 'documentation' },
+                { id: 'w2a3', text: 'Map data flows: Workday → downstream systems', category: 'research' },
+                { id: 'w2a4', text: 'Explore Workday data model and Studio capabilities', category: 'research' },
+                { id: 'w2a5', text: 'Identify gaps between operational reporting vs decision analytics', category: 'analysis' }
+              ],
+              deliverables: [
+                'Workday Reporting Inventory spreadsheet',
+                'Data Structure Map',
+                'Gaps & Pain Points Log'
+              ]
+            },
+            {
+              week: 3,
+              dates: 'Jan 20-24',
+              focus: 'Stakeholder Listening Tour',
+              activities: [
+                { id: 'w3a1', text: 'Interview HRBPs about workforce decisions', category: 'meeting' },
+                { id: 'w3a2', text: 'Meet with Joey (TA Ops) on hiring forecasting', category: 'meeting' },
+                { id: 'w3a3', text: 'Meet with Janelle (Finance) on workforce planning', category: 'meeting' },
+                { id: 'w3a4', text: 'Meet with Marci (Total Rewards) on compensation analytics', category: 'meeting' },
+                { id: 'w3a5', text: 'Meet with Employee Relations on trend analysis', category: 'meeting' },
+                { id: 'w3a6', text: 'Meet with Sura (Payroll) on reporting needs', category: 'meeting' }
+              ],
+              deliverables: [
+                'Stakeholder Interview Summary',
+                'Analytics Use Case Inventory'
+              ]
+            }
+          ]
+        },
+        {
+          id: 'phase2',
+          name: 'Audit & Frame the Future',
+          weeks: '4-6',
+          goal: 'Create clarity on what stays, what goes, and what we build. Define the vision and principles for People Analytics.',
+          weeks_detail: [
+            {
+              week: 4,
+              dates: 'Jan 27-31',
+              focus: 'Current State Audit & Early Wins',
+              activities: [
+                { id: 'w4a1', text: 'Complete current-state audit (tools, data, owners, metrics)', category: 'documentation' },
+                { id: 'w4a2', text: 'Organize use cases by function and prioritize', category: 'analysis' },
+                { id: 'w4a3', text: 'Identify and execute 3-5 quick wins', category: 'delivery' },
+                { id: 'w4a4', text: 'Create lightweight intake process for analytics requests', category: 'process' }
+              ],
+              deliverables: [
+                'People Analytics Current-State Audit Document',
+                'Prioritized Analytics Use-Case Inventory',
+                'Quick Wins List (3-5 items)'
+              ]
+            },
+            {
+              week: 5,
+              dates: 'Feb 3-7',
+              focus: 'Define Analytics Principles & Standards',
+              activities: [
+                { id: 'w5a1', text: 'Draft metric standards and definitions', category: 'documentation' },
+                { id: 'w5a2', text: 'Define data governance framework', category: 'documentation' },
+                { id: 'w5a3', text: 'Establish quality standards and storytelling principles', category: 'documentation' },
+                { id: 'w5a4', text: 'Meet with Marco (Data Engineering) on infrastructure', category: 'meeting' },
+                { id: 'w5a5', text: 'Begin One Model research and vendor questions', category: 'research' }
+              ],
+              deliverables: [
+                'People Analytics Principles & Standards Document',
+                'Data Engineering Partnership Summary',
+                'One Model Implementation Questions'
+              ]
+            },
+            {
+              week: 6,
+              dates: 'Feb 10-14',
+              focus: 'Define Operating Model & Roadmap',
+              activities: [
+                { id: 'w6a1', text: 'Design analytics service model and intake process', category: 'process' },
+                { id: 'w6a2', text: 'Create governance structure and steering committee', category: 'process' },
+                { id: 'w6a3', text: 'Draft 12-month People Analytics roadmap', category: 'documentation' },
+                { id: 'w6a4', text: 'Build prioritization criteria and decision framework', category: 'process' }
+              ],
+              deliverables: [
+                'People Analytics Operating Model Document',
+                '12-Month Analytics Roadmap',
+                'Analytics Intake & Triage Process'
+              ]
+            }
+          ]
+        },
+        {
+          id: 'phase3',
+          name: 'Build & Implement',
+          weeks: '7-10',
+          goal: 'Transition from planning → execution. Launch One Model, deliver quick wins, begin building trust.',
+          weeks_detail: [
+            {
+              week: 7,
+              dates: 'Feb 17-21',
+              focus: 'One Model Implementation Planning (Part 1)',
+              activities: [
+                { id: 'w7a1', text: 'Create detailed One Model implementation plan', category: 'documentation' },
+                { id: 'w7a2', text: 'Map data sources and integration requirements', category: 'research' },
+                { id: 'w7a3', text: 'Define Phase 1: Foundation (Months 1-2)', category: 'planning' },
+                { id: 'w7a4', text: 'Define Phase 2: Expansion (Months 3-4)', category: 'planning' }
+              ],
+              deliverables: [
+                'One Model Implementation Plan (detailed)'
+              ]
+            },
+            {
+              week: 8,
+              dates: 'Feb 24-28',
+              focus: 'One Model Implementation Planning (Part 2)',
+              activities: [
+                { id: 'w8a1', text: 'Present implementation plan to Nicole and PLT', category: 'meeting' },
+                { id: 'w8a2', text: 'Review with Marco for technical validation', category: 'meeting' },
+                { id: 'w8a3', text: 'Confirm scope and timeline with vendor', category: 'meeting' },
+                { id: 'w8a4', text: 'Execute quick wins from Week 4', category: 'delivery' }
+              ],
+              deliverables: [
+                'One Model Stakeholder Alignment Deck',
+                'Quick Wins Delivered (2-3 items)'
+              ]
+            },
+            {
+              week: 9,
+              dates: 'Mar 3-7',
+              focus: 'Data Literacy & Training Strategy (Part 1)',
+              activities: [
+                { id: 'w9a1', text: 'Design data literacy curriculum (3 levels)', category: 'documentation' },
+                { id: 'w9a2', text: 'Create Workday reporting training guide', category: 'documentation' },
+                { id: 'w9a3', text: 'Build Domo/One Model user guide', category: 'documentation' },
+                { id: 'w9a4', text: 'Develop metrics glossary and definitions handbook', category: 'documentation' }
+              ],
+              deliverables: [
+                'Data Literacy Curriculum outline'
+              ]
+            },
+            {
+              week: 10,
+              dates: 'Mar 10-14',
+              focus: 'Data Literacy & Training Strategy (Part 2)',
+              activities: [
+                { id: 'w10a1', text: 'Run 1-2 pilot training sessions', category: 'delivery' },
+                { id: 'w10a2', text: 'Gather feedback and iterate on materials', category: 'analysis' },
+                { id: 'w10a3', text: 'Plan rollout schedule for broader team', category: 'planning' },
+                { id: 'w10a4', text: 'Establish analytics communication cadence', category: 'process' }
+              ],
+              deliverables: [
+                'Complete Training Materials',
+                'Training Pilot Feedback Summary',
+                'Analytics Communication Plan'
+              ]
+            }
+          ]
+        },
+        {
+          id: 'phase4',
+          name: 'Relaunch & Scale',
+          weeks: '11-13+',
+          goal: 'Establish People Analytics as a trusted, decision-driving capability embedded in how Carta works.',
+          weeks_detail: [
+            {
+              week: 11,
+              dates: 'Mar 17-21',
+              focus: 'Official Relaunch (Part 1)',
+              activities: [
+                { id: 'w11a1', text: 'Draft People Analytics relaunch announcement', category: 'documentation' },
+                { id: 'w11a2', text: 'Communicate new operating model and roadmap', category: 'delivery' },
+                { id: 'w11a3', text: 'Introduce One Model or share timeline', category: 'delivery' },
+                { id: 'w11a4', text: 'Highlight early wins and success stories', category: 'delivery' }
+              ],
+              deliverables: [
+                'Relaunch Communication (email, Slack)'
+              ]
+            },
+            {
+              week: 12,
+              dates: 'Mar 24-28',
+              focus: 'Official Relaunch (Part 2)',
+              activities: [
+                { id: 'w12a1', text: 'Establish Analytics Steering Committee', category: 'process' },
+                { id: 'w12a2', text: 'Launch regular roadmap reviews with stakeholders', category: 'process' },
+                { id: 'w12a3', text: 'Create metrics dashboards for Analytics function', category: 'delivery' },
+                { id: 'w12a4', text: 'Embed analytics in quarterly talent reviews', category: 'delivery' }
+              ],
+              deliverables: [
+                'Governance & Review Cadence Established'
+              ]
+            },
+            {
+              week: 13,
+              dates: 'Mar 31-Apr 4',
+              focus: 'Continuous Improvement & Advanced Analytics',
+              activities: [
+                { id: 'w13a1', text: 'Begin building predictive models (attrition, performance)', category: 'delivery' },
+                { id: 'w13a2', text: 'Expand self-serve capabilities', category: 'delivery' },
+                { id: 'w13a3', text: 'Host lunch-and-learns on analytics topics', category: 'delivery' },
+                { id: 'w13a4', text: 'Foster analytics culture and experimentation', category: 'process' }
+              ],
+              deliverables: [
+                '90-Day Success Metrics Review'
+              ]
+            }
+          ]
+        }
+      ],
+      stakeholders: [
+        {
+          name: 'May Shi',
+          team: 'AI Product – Nicole',
+          location: 'Remote (WA)',
+          priority: 'CRITICAL',
+          context: 'Previously owned analytics work. Deep dive on: Domo dashboards, historical ONA work, performance analyses, ad-hoc leadership requests, analytics philosophy, prior constraints.',
+          questions: [
+            'What dashboards exist? Which are used vs ignored?',
+            'What historical analytics work should I review?',
+            'What were your biggest constraints?',
+            'What lessons learned would you share?'
+          ]
+        },
+        {
+          name: 'Nicole Amodei',
+          team: 'Director, People Platform',
+          location: 'NY',
+          priority: 'HIGH',
+          context: 'Your manager. Part of PLT. Owns People infrastructure strategy. Analytics vision, prioritization, One Model strategy, executive narratives, stakeholder relationships.'
+        },
+        {
+          name: 'Marco Albuquerque',
+          team: 'Director, Data Engineering',
+          location: 'TBD',
+          priority: 'KEY TECHNICAL PARTNER',
+          context: 'Owns data infrastructure. Partner on data pipelines, integrations, technical architecture for One Model and analytics platform.',
+          questions: [
+            'What data infrastructure exists today?',
+            'What are the technical requirements for One Model?',
+            'How should we approach data governance?'
+          ]
+        },
+        {
+          name: 'Khadi Tshishiku',
+          team: 'People Systems Contractor',
+          location: 'Seattle',
+          priority: 'HIGH',
+          context: 'Deep multi-modular Workday experience. Partner on calculated fields, advanced reporting, Workday limitations.'
+        },
+        {
+          name: 'Sarah Canent',
+          team: 'People Systems Lead',
+          location: 'NY',
+          priority: 'HIGH',
+          context: 'PATT (Payroll, Absence, Time, Talent Optimization). Partner on Workday data structures and reporting capabilities.'
+        },
+        {
+          name: 'Janelle Waters',
+          team: 'Head of Strategic Finance',
+          location: 'TBD',
+          priority: 'MEDIUM',
+          context: 'Manages Pigment, FP&A. Critical partner for workforce planning and financial modeling.',
+          questions: [
+            'What workforce planning integration do you need?',
+            'How do you currently model headcount?',
+            'What people data would help your forecasting?'
+          ]
+        },
+        {
+          name: 'Joey Quaranti',
+          team: 'TA Ops Leader',
+          location: 'TBD',
+          priority: 'MEDIUM',
+          context: 'Manages Greenhouse, workforce planning, TA Ops/Programs, onboarding. Key stakeholder for hiring analytics and forecasting.',
+          questions: [
+            'What hiring forecasting challenges do you face?',
+            'What pipeline analytics would be most valuable?',
+            'How do you plan capacity today?'
+          ]
+        }
+      ],
+      resources: [
+        { name: 'People Platform Drive', type: 'drive', description: 'Team documentation, SOPs, project plans' },
+        { name: 'People Systems Drive', type: 'drive', description: 'Workday reference materials, technical documentation' },
+        { name: 'Workday Training Drive', type: 'drive', description: 'Training guides and videos' },
+        { name: 'People Ops Drive', type: 'drive', description: 'People Ops reference files' },
+        { name: 'People Ops Site', type: 'website', description: 'Hub for all things People Ops' },
+        { name: 'Domo', type: 'tool', description: 'Current analytics dashboards (audit these)' },
+        { name: 'Workday Community', type: 'external', description: 'Official Workday resources, documentation, release notes' }
+      ],
+      tools: [
+        'Domo – Current BI tool (review existing dashboards)',
+        'Lattice – Talent management platform (1:1s, goals, performance)',
+        'Workday – Primary HRIS (production and sandbox)',
+        'JIRA – Ticketing and project management',
+        'One Model – Analytics platform (Q1 implementation)'
+      ]
+    };
+
+    // Storage helper with fallback to localStorage
+    const storage = {
+      get: async (key) => {
+        try {
+          if (window.storage && window.storage.get) {
+            return await window.storage.get(key);
+          }
+          const value = localStorage.getItem(key);
+          return value ? { value } : null;
+        } catch (e) {
+          const value = localStorage.getItem(key);
+          return value ? { value } : null;
+        }
+      },
+      set: async (key, value) => {
+        try {
+          if (window.storage && window.storage.set) {
+            return await window.storage.set(key, value);
+          }
+          localStorage.setItem(key, value);
+          return { key, value };
+        } catch (e) {
+          localStorage.setItem(key, value);
+          return { key, value };
+        }
+      }
+    };
+
+    function OnboardingDashboard() {
+      const [activeView, setActiveView] = useState('timeline');
+      const [progress, setProgress] = useState({});
+      const [currentWeek, setCurrentWeek] = useState(1);
+      const [chatMessages, setChatMessages] = useState([]);
+      const [chatInput, setChatInput] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+      const chatEndRef = useRef(null);
+
+      useEffect(() => {
+        loadProgress();
+        calculateCurrentWeek();
+      }, []);
+
+      const loadProgress = async () => {
+        try {
+          const result = await storage.get('onboarding-progress');
+          if (result) {
+            setProgress(JSON.parse(result.value));
+          }
+        } catch (error) {
+          console.log('No saved progress found');
+        }
+      };
+
+      const saveProgress = async (newProgress) => {
+        try {
+          await storage.set('onboarding-progress', JSON.stringify(newProgress));
+          setProgress(newProgress);
+        } catch (error) {
+          console.error('Failed to save progress:', error);
+        }
+      };
+
+      const toggleActivity = (activityId) => {
+        const newProgress = { ...progress, [activityId]: !progress[activityId] };
+        saveProgress(newProgress);
+      };
+
+      const calculateCurrentWeek = () => {
+        const startDate = new Date('2025-01-06');
+        const today = new Date();
+        const diffTime = today - startDate;
+        const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
+        setCurrentWeek(Math.max(1, Math.min(diffWeeks, 13)));
+      };
+
+      const scrollToBottom = () => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      useEffect(() => {
+        scrollToBottom();
+      }, [chatMessages]);
+
+      const sendMessage = async () => {
+        if (!chatInput.trim()) return;
+
+        const userMessage = chatInput.trim();
+        setChatInput('');
+        setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+        setIsLoading(true);
+
+        try {
+          const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'claude-sonnet-4-20250514',
+              max_tokens: 1000,
+              system: `You're an onboarding guide for Giorgi, the new People Analytics Manager at Carta. You have complete knowledge of his 90-day onboarding plan, stakeholders, and responsibilities.
+
+Your role is to:
+- Answer questions about the onboarding roadmap
+- Provide context on stakeholders and why they matter
+- Help prepare for meetings with specific questions to ask
+- Link activities to the broader mission
+- Be encouraging and supportive
+
+Onboarding data: ${JSON.stringify(ONBOARDING_DATA, null, 2)}
+
+Be concise but helpful. When discussing stakeholders or activities, explain the strategic importance.`,
+              messages: [
+                ...chatMessages.filter(m => m.role !== 'system'),
+                { role: 'user', content: userMessage }
+              ]
+            })
+          });
+
+          const data = await response.json();
+          const assistantMessage = data.content.find(c => c.type === 'text')?.text || 'Sorry, I encountered an error.';
+          
+          setChatMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+        } catch (error) {
+          setChatMessages(prev => [...prev, { 
+            role: 'assistant', 
+            content: 'Sorry, the AI assistant requires an API connection. Please use the Timeline, Stakeholders, and Resources tabs for now!' 
+          }]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const getWeekProgress = (weekNum) => {
+        const phase = ONBOARDING_DATA.phases.find(p => 
+          p.weeks_detail.some(w => w.week === weekNum)
+        );
+        const week = phase?.weeks_detail.find(w => w.week === weekNum);
+        
+        if (!week) return 0;
+        
+        const totalActivities = week.activities.length;
+        const completedActivities = week.activities.filter(a => progress[a.id]).length;
+        
+        return Math.round((completedActivities / totalActivities) * 100);
+      };
+
+      const getTotalProgress = () => {
+        const allActivities = ONBOARDING_DATA.phases.flatMap(p => 
+          p.weeks_detail.flatMap(w => w.activities)
+        );
+        const completed = allActivities.filter(a => progress[a.id]).length;
+        return Math.round((completed / allActivities.length) * 100);
+      };
+
+      const filteredStakeholders = ONBOARDING_DATA.stakeholders.filter(s =>
+        searchQuery === '' || 
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.context.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      const TimelineView = () => (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">90-Day Onboarding Journey</h2>
+              <p className="text-gray-600 mt-1">Track your progress through People Analytics onboarding</p>
+            </div>
+            <div className="text-right">
+              <div className="text-5xl font-bold text-indigo-600">{getTotalProgress()}%</div>
+              <div className="text-sm text-gray-500">Overall Progress</div>
+            </div>
+          </div>
+
+          {ONBOARDING_DATA.phases.map((phase, idx) => (
+            <div key={phase.id} className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-8 py-6 border-b border-gray-200">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">
+                        Phase {idx + 1}
+                      </span>
+                      <h3 className="text-2xl font-bold text-gray-900">{phase.name}</h3>
+                    </div>
+                    <p className="text-gray-600 mt-2 text-lg">{phase.goal}</p>
+                    <div className="text-sm text-gray-500 mt-2">Weeks {phase.weeks}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-8 space-y-6">
+                {phase.weeks_detail.map((week) => {
+                  const weekProgress = getWeekProgress(week.week);
+                  const isCurrentWeek = week.week === currentWeek;
+                  
+                  return (
+                    <div 
+                      key={week.week}
+                      className={`border-l-4 pl-6 pb-6 ${
+                        isCurrentWeek 
+                          ? 'border-indigo-500 bg-indigo-50/30 -ml-8 pl-14 pr-8 py-4 rounded-r-xl' 
+                          : 'border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <h4 className="text-xl font-bold text-gray-900">Week {week.week}</h4>
+                            {isCurrentWeek && (
+                              <span className="text-xs font-semibold text-indigo-600 bg-indigo-100 px-2 py-1 rounded">
+                                CURRENT
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500">{week.dates}</p>
+                          <p className="text-base font-medium text-gray-700 mt-1">{week.focus}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-indigo-600">{weekProgress}%</div>
+                          <div className="text-xs text-gray-500">Complete</div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 mt-4">
+                        {week.activities.map(activity => (
+                          <div 
+                            key={activity.id}
+                            className="flex items-start gap-3 group cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                            onClick={() => toggleActivity(activity.id)}
+                          >
+                            {progress[activity.id] ? (
+                              <Icons.CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            ) : (
+                              <Icons.Circle className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5 group-hover:text-indigo-400" />
+                            )}
+                            <span className={`flex-1 ${
+                              progress[activity.id] 
+                                ? 'text-gray-500 line-through' 
+                                : 'text-gray-800'
+                            }`}>
+                              {activity.text}
+                            </span>
+                            <span className={`text-xs px-2 py-1 rounded ${
+                              activity.category === 'meeting' ? 'bg-blue-100 text-blue-700' :
+                              activity.category === 'research' ? 'bg-purple-100 text-purple-700' :
+                              activity.category === 'documentation' ? 'bg-green-100 text-green-700' :
+                              activity.category === 'delivery' ? 'bg-orange-100 text-orange-700' :
+                              activity.category === 'analysis' ? 'bg-pink-100 text-pink-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {activity.category}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {week.deliverables && week.deliverables.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="text-sm font-semibold text-gray-700 mb-2">📦 Deliverables:</div>
+                          <ul className="space-y-1">
+                            {week.deliverables.map((deliverable, i) => (
+                              <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                                <Icons.ChevronRight className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+                                <span>{deliverable}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
+      const StakeholdersView = () => (
+        <div>
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Key Stakeholders</h2>
+            <p className="text-gray-600">People you'll work with closely during onboarding</p>
+            
+            <div className="relative mt-4">
+              <Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search stakeholders..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-400"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {filteredStakeholders.map(stakeholder => (
+              <div 
+                key={stakeholder.name}
+                className="bg-white rounded-xl shadow-sm border-2 border-gray-100 p-6 hover:border-indigo-200 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">{stakeholder.name}</h3>
+                    <p className="text-sm text-gray-600">{stakeholder.team}</p>
+                    <p className="text-xs text-gray-500 mt-1">📍 {stakeholder.location}</p>
+                  </div>
+                  {stakeholder.priority && (
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                      stakeholder.priority.includes('CRITICAL') ? 'bg-red-100 text-red-700' :
+                      stakeholder.priority === 'HIGH' ? 'bg-orange-100 text-orange-700' :
+                      stakeholder.priority.includes('KEY') ? 'bg-purple-100 text-purple-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                      {stakeholder.priority}
+                    </span>
+                  )}
+                </div>
+                
+                <p className="text-gray-700 text-sm leading-relaxed mb-4">{stakeholder.context}</p>
+                
+                {stakeholder.questions && stakeholder.questions.length > 0 && (
+                  <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+                    <div className="text-sm font-semibold text-indigo-900 mb-2">💭 Questions to Ask:</div>
+                    <ul className="space-y-1">
+                      {stakeholder.questions.map((q, i) => (
+                        <li key={i} className="text-sm text-indigo-800 flex items-start gap-2">
+                          <span className="text-indigo-400 flex-shrink-0">•</span>
+                          <span>{q}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+
+      const ResourcesView = () => (
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Resources & Tools</h2>
+          
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Icons.BookOpen className="w-5 h-5 text-indigo-600" />
+                Key Resources
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {ONBOARDING_DATA.resources.map(resource => (
+                  <div 
+                    key={resource.name}
+                    className="bg-white rounded-xl border-2 border-gray-100 p-5 hover:border-indigo-200 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                        {resource.name}
+                      </h4>
+                      <Icons.ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
+                    </div>
+                    <p className="text-sm text-gray-600">{resource.description}</p>
+                    <span className="text-xs text-gray-500 mt-2 inline-block">
+                      {resource.type}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">🛠️ Tools to Request</h3>
+              <div className="bg-white rounded-xl border-2 border-gray-100 p-6">
+                <ul className="space-y-3">
+                  {ONBOARDING_DATA.tools.map((tool, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <Icons.CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">{tool}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-100 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">📚 Request Access via Productiv AppCenter</h3>
+              <p className="text-gray-700 mb-4">
+                All tools can be requested through the Productiv AppCenter. Make sure to request access during your first week.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+
+      const ChatView = () => (
+        <div className="h-[calc(100vh-12rem)] flex flex-col">
+          <div className="mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">AI Assistant</h2>
+            <p className="text-gray-600">Ask questions about your onboarding plan, stakeholders, or responsibilities</p>
+          </div>
+
+          <div className="flex-1 bg-white rounded-xl border-2 border-gray-100 overflow-hidden flex flex-col">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {chatMessages.length === 0 ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <Icons.Sparkles className="w-16 h-16 text-indigo-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Ask me anything!</h3>
+                    <p className="text-gray-600 mb-6 max-w-md">Try asking:</p>
+                    <div className="space-y-2 text-left max-w-md mx-auto">
+                      <button 
+                        onClick={() => setChatInput("What should I focus on in Week 1?")}
+                        className="w-full text-left p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors text-sm text-gray-700"
+                      >
+                        💡 What should I focus on in Week 1?
+                      </button>
+                      <button 
+                        onClick={() => setChatInput("Who are the most important stakeholders to meet first?")}
+                        className="w-full text-left p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors text-sm text-gray-700"
+                      >
+                        👥 Who are the most important stakeholders?
+                      </button>
+                      <button 
+                        onClick={() => setChatInput("What questions should I ask during my listening tour?")}
+                        className="w-full text-left p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors text-sm text-gray-700"
+                      >
+                        ❓ What questions should I ask in interviews?
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {chatMessages.map((msg, idx) => (
+                    <div 
+                      key={idx}
+                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`max-w-[80%] rounded-2xl px-5 py-3 ${
+                        msg.role === 'user' 
+                          ? 'bg-indigo-600 text-white' 
+                          : 'bg-gray-100 text-gray-900'
+                      }`}>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-2xl px-5 py-3">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </>
+              )}
+            </div>
+
+            <div className="p-4 border-t-2 border-gray-100">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !isLoading && sendMessage()}
+                  placeholder="Ask a question..."
+                  disabled={isLoading}
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-400 disabled:bg-gray-50"
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={isLoading || !chatInput.trim()}
+                  className="bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/30">
+          <header className="bg-white border-b-2 border-gray-100 sticky top-0 z-10 shadow-sm">
+            <div className="max-w-7xl mx-auto px-8 py-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">People Analytics Onboarding</h1>
+                  <p className="text-sm text-gray-600 mt-1">Welcome, Giorgi! 🎉</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Week {currentWeek} of 13</span>
+                  <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-indigo-600 transition-all duration-500"
+                      style={{ width: `${(currentWeek / 13) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <nav className="bg-white border-b border-gray-200 sticky top-[89px] z-10">
+            <div className="max-w-7xl mx-auto px-8">
+              <div className="flex gap-1">
+                {[
+                  { id: 'timeline', label: 'Timeline', icon: Icons.Calendar },
+                  { id: 'stakeholders', label: 'Stakeholders', icon: Icons.Users },
+                  { id: 'resources', label: 'Resources', icon: Icons.BookOpen },
+                  { id: 'chat', label: 'AI Assistant', icon: Icons.MessageSquare }
+                ].map(({ id, label, icon: Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => setActiveView(id)}
+                    className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors border-b-2 ${
+                      activeView === id
+                        ? 'border-indigo-600 text-indigo-600'
+                        : 'border-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </nav>
+
+          <main className="max-w-7xl mx-auto px-8 py-8">
+            {activeView === 'timeline' && <TimelineView />}
+            {activeView === 'stakeholders' && <StakeholdersView />}
+            {activeView === 'resources' && <ResourcesView />}
+            {activeView === 'chat' && <ChatView />}
+          </main>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<OnboardingDashboard />, document.getElementById('root'));
+  </script>
+</body>
+</html>
